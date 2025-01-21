@@ -1,4 +1,3 @@
-# main.tf
 resource "aws_vpc" "dev_vpc" {
   cidr_block           = "10.123.0.0/16"
   enable_dns_hostnames = true
@@ -77,7 +76,8 @@ resource "aws_key_pair" "dev_key_auth" {
 
 }
 
-resource "aws_instance" "foo" {
+resource "aws_instance" "dev-node" {
+  count         = var.instance_count * 3  # Multiplie le nombre d'instances par 3
   ami           = data.aws_ami.server_ami.id
   instance_type = "t2.micro"
   key_name = aws_key_pair.dev_key_auth.id # On peut utiliser key_name à la place de id
@@ -85,7 +85,16 @@ resource "aws_instance" "foo" {
   subnet_id = aws_subnet.dev_pub_subnet.id
 
   tags ={
-    Name = "dev-node"
+    Name = "dev-node-${count.index}"
   }
 
 } 
+
+resource "aws_s3_bucket" "dev_s3_bucket" {
+  bucket = "my-dev-env-s3-bucket"
+
+  tags = {
+    Name        = "My bucket"
+    Environment = "dev"
+  }
+}
